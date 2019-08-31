@@ -1,3 +1,4 @@
+VERSION=0.1
 BIN_NAME=adcl
 
 all: build windows mac
@@ -11,13 +12,25 @@ windows:
 mac:
 	GOOS=darwin GOARCH=amd64 go build -o ${BIN_NAME}_darwin
 
+releases: all
+	tar -czvf ${BIN_NAME}v${VERSION}_linux.tar.gz ${BIN_NAME}
+	tar -czvf ${BIN_NAME}v${VERSION}_win.tar.gz ${BIN_NAME}.exe
+	tar -czvf ${BIN_NAME}v${VERSION}_darwin.tar.gz ${BIN_NAME}_darwin
+
 install:
 	go build -o ${GOPATH}/bin/${BIN_NAME}
 
 uninstall:
 	rm -f ${GOPATH}/bin/${BIN_NAME}
 
-clean:
+clean_bin:
 	rm -f ${BIN_NAME}
 	rm -f ${BIN_NAME}_darwin
 	rm -f ${BIN_NAME}.exe
+
+clean_releases:
+	rm -f ${BIN_NAME}v${VERSION}_linux.tar.gz
+	rm -f ${BIN_NAME}v${VERSION}_win.tar.gz
+	rm -f ${BIN_NAME}v${VERSION}_darwin.tar.gz
+
+clean: clean_bin clean_releases
