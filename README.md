@@ -4,7 +4,7 @@ episodes from https://amalgam-fansubs.moe/.
 
 # Installation
 ## Download releases
-Download the binary for your system from the release page.
+Download the binary for your system from the [release page](https://gitlab.com/mauamy/amalgamdetektivconandownloader/-/tags).
 
 ## Build it yourself
 If you want to build it yourself, simply clone this repository and use the makefile
