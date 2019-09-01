@@ -20,6 +20,21 @@ func CmdApp() *cli.App {
 			Aliases: []string{"l"},
 			Usage:   "list available episodes",
 			Action:  ListEpisodes,
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:     "dlink",
+					Usage:    "List episodes with download links",
+					Required: false,
+					Hidden:   false,
+				},
+				cli.StringFlag{
+					Name:     "format",
+					Usage:    "available values: csv, html, md",
+					Required: false,
+					Hidden:   false,
+					Value:    "",
+				},
+			},
 		},
 		{
 			Name:      "download",
@@ -41,9 +56,14 @@ func ListEpisodes(c *cli.Context) error {
 
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.SetStyle(table.StyleBold)
+	t.SetStyle(table.StyleRounded)
 
-	t.AppendHeader(table.Row{"Nr.", "Title", "Available"})
+	if c.Bool("dlink") {
+		t.AppendHeader(table.Row{"Nr.", "Title", "Available", "Download Link"})
+	} else {
+		t.AppendHeader(table.Row{"Nr.", "Title", "Available"})
+	}
+
 	notAvailable := 0
 	for _, e := range episodes {
 		available := "✓"
@@ -51,11 +71,25 @@ func ListEpisodes(c *cli.Context) error {
 			available = "✘"
 			notAvailable++
 		}
-		t.AppendRow(table.Row{e.EpisodeNr, e.Title, available})
+		if c.Bool("dlink") {
+			t.AppendRow(table.Row{e.EpisodeNr, e.Title, available, e.GDriveLink})
+		} else {
+			t.AppendRow(table.Row{e.EpisodeNr, e.Title, available})
+		}
+
 	}
 
 	t.AppendFooter(table.Row{fmt.Sprintf("Total: %v", len(episodes)), "", fmt.Sprintf("Available: %v", len(episodes)-notAvailable)})
-	t.Render()
+
+	if c.String("format") == "csv" {
+		t.RenderCSV()
+	} else if c.String("format") == "html" {
+		t.RenderHTML()
+	} else if c.String("format") == "md" {
+		t.RenderMarkdown()
+	} else {
+		t.Render()
+	}
 
 	return nil
 }
