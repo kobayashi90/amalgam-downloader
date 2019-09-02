@@ -27,6 +27,12 @@ func CmdApp() *cli.App {
 					Required: false,
 					Hidden:   false,
 				},
+				cli.BoolFlag{
+					Name:     "available,a",
+					Usage:    "Show only episodes that can be downloaded",
+					Required: false,
+					Hidden:   false,
+				},
 				cli.StringFlag{
 					Name:     "format",
 					Usage:    "available values: csv, html, md",
@@ -67,12 +73,18 @@ func ListEpisodes(c *cli.Context) error {
 	notAvailable := 0
 	for _, e := range episodes {
 		available := "✓"
-		if e.GDriveLink == "" {
+		if !e.Downloadable {
 			available = "✘"
 			notAvailable++
 		}
+
+		// Skip if available flag and episode is not downloadable
+		if c.Bool("available") && !e.Downloadable {
+			continue
+		}
+
 		if c.Bool("dlink") {
-			t.AppendRow(table.Row{e.EpisodeNr, e.Title, available, e.GDriveLink})
+			t.AppendRow(table.Row{e.EpisodeNr, e.Title, available, e.DownloadLink})
 		} else {
 			t.AppendRow(table.Row{e.EpisodeNr, e.Title, available})
 		}
@@ -135,7 +147,7 @@ func DownloadEpisodes(c *cli.Context) error {
 	for _, episodeNr := range episodeArgList {
 		// check if episode is available
 		_, ok := episodes[episodeNr]
-		if !ok || episodes[episodeNr].GDriveLink == "" {
+		if !ok || !episodes[episodeNr].Downloadable {
 			fmt.Printf("Episode %v is not available\n", episodeNr)
 			continue
 		}
