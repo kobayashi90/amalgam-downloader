@@ -46,7 +46,7 @@ func CmdApp() *cli.App {
 			Name:      "download",
 			Aliases:   []string{"d"},
 			Usage:     "download episodes",
-			ArgsUsage: "episode list: 1,2,3, episode range: 4-10, combined: 1,2-6,8",
+			ArgsUsage: "episode list: 1 2 3  episode range: 4-10, combined: 1 2-6 8",
 			Action:    DownloadEpisodes,
 		},
 	}
@@ -108,11 +108,10 @@ func ListEpisodes(c *cli.Context) error {
 
 func DownloadEpisodes(c *cli.Context) error {
 	var episodeArgList []string
-	episodesArg := c.Args().Get(0)
+	episodesArgs := c.Args()
 
 	// Parse episodes argument
-	commaSplitted := strings.Split(episodesArg, ",")
-	for _, s := range commaSplitted {
+	for _, s := range episodesArgs {
 		if strings.Contains(s, "-") {
 			// handle ranges
 			splitted := strings.Split(s, "-")
@@ -132,6 +131,8 @@ func DownloadEpisodes(c *cli.Context) error {
 			episodeArgList = append(episodeArgList, s)
 		}
 	}
+
+	fmt.Println("episodeArgList:", episodeArgList)
 
 	// Fetch episodes and create map for easier download
 	episodesList, err := FetchEpisodes()

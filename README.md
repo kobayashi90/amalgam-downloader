@@ -41,6 +41,9 @@ $ adcl l
 $ adcl download <episode_numbers>
 $ adcl d <episode_numbers>
 ```
-*<episode_numbers>* is a comma-separated list of episode numbers: **1,2,3,4**.
+*<episode_numbers>* is a separated list of episode numbers: **1 2 3 4**.
 In addition you can provide ranges within this list: **1,2,3-8,10**. 
-
+```bash
+# example
+$ adcl d 710 840-845 870
+```
