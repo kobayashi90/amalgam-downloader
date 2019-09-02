@@ -14,6 +14,7 @@ type Episode struct {
 	EpisodeNr    string
 	DownloadLink string
 	Downloadable bool
+	Note         string
 }
 
 func DownloadEpisode(episode *Episode) error {
@@ -78,16 +79,15 @@ func FetchEpisodes() ([]*Episode, error) {
 		for i := 1; i < len(rows); i++ {
 			cols := htmlquery.Find(rows[i], "//td")
 			episodeNr := htmlquery.InnerText(cols[0]) // number
-			episodeNr = strings.TrimSuffix(episodeNr, ".")
-			episodeTitle := htmlquery.InnerText(cols[1])                   // title
-			gdriveLink := htmlquery.SelectAttr(cols[3].FirstChild, "href") // gdrive link
-
-			downloadable := strings.Contains(gdriveLink, "drive.google")
+			episodeNr = strings.ReplaceAll(episodeNr, ".", "")
+			episodeTitle := htmlquery.InnerText(cols[1])                     // title
+			downloadLink := htmlquery.SelectAttr(cols[3].FirstChild, "href") // gdrive link
+			downloadable := strings.Contains(downloadLink, "drive.google")
 
 			episodes = append(episodes, &Episode{
 				Title:        episodeTitle,
-				EpisodeNr:    episodeNr,
-				DownloadLink: gdriveLink,
+				EpisodeNr:    strings.TrimSpace(episodeNr),
+				DownloadLink: downloadLink,
 				Downloadable: downloadable,
 			})
 		}
