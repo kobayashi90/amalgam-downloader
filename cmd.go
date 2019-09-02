@@ -22,7 +22,7 @@ func CmdApp() *cli.App {
 			Action:  ListEpisodes,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
-					Name:     "dlink",
+					Name:     "dlink,d",
 					Usage:    "List episodes with download links",
 					Required: false,
 					Hidden:   false,
@@ -151,6 +151,7 @@ func DownloadEpisodes(c *cli.Context) error {
 	}
 
 	fmt.Println("Downloading Episodes:", strings.Join(episodeArgList, " "))
+	fmt.Println()
 
 	// download episodes
 	for _, episodeNr := range episodeArgList {

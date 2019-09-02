@@ -8,10 +8,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
 type WriteCounter struct {
+	Current  uint64
 	Total    uint64
 	Filename string
 }
@@ -40,6 +43,36 @@ func GetConfirmCodeAndCookies(exportUrl string) ([]*http.Cookie, string, error) 
 	return resp.Cookies(), ucConfirmCode, nil
 }
 
+func GetTotalFileSize(exportUrl string) (int, error) {
+	doc, err := htmlquery.LoadURL(exportUrl)
+	if err != nil {
+		return -1, err
+	}
+	sizeSpan := htmlquery.FindOne(doc, "//span[@class = 'uc-name-size']")
+	sizeSpanText := htmlquery.InnerText(sizeSpan)
+
+	r, err := regexp.Compile("\\(([0-9]+)([kKmMgG])\\)")
+	if err != nil {
+		return -1, err
+	}
+	matches := r.FindStringSubmatch(sizeSpanText)
+	size, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return -1, err
+	}
+	sizeEntity := strings.ToLower(matches[2])
+	switch sizeEntity {
+	case "g":
+		size *= 1024 * 1024 * 1024
+	case "m":
+		size *= 1024 * 1024
+	case "k":
+		size *= 1024
+	}
+
+	return size, err
+}
+
 func GdriveDownload(url, filePath string) error {
 	// get file id
 	splitted := strings.Split(url, "/")
@@ -52,14 +85,19 @@ func GdriveDownload(url, filePath string) error {
 		return err
 	}
 
+	totalFileSize, err := GetTotalFileSize(exportUrl)
+	if err != nil {
+		return err
+	}
+
 	confirmUrl := fmt.Sprintf("%v&confirm=%v", exportUrl, confirmCode)
 
-	err = DownloadFile(filePath, confirmUrl, cookies)
+	err = DownloadFile(filePath, confirmUrl, cookies, totalFileSize)
 
 	return err
 }
 
-func DownloadFile(filepath string, url string, cookies []*http.Cookie) error {
+func DownloadFile(filepath string, url string, cookies []*http.Cookie, totalFileSize int) error {
 	client := http.Client{}
 
 	// Get the data
@@ -85,8 +123,13 @@ func DownloadFile(filepath string, url string, cookies []*http.Cookie) error {
 	}
 	defer out.Close()
 
+	// Limit totalFileSize lowest value to 0
+	if totalFileSize < 0 {
+		totalFileSize = 0
+	}
+
 	// Write the body to file
-	counter := &WriteCounter{Filename: filepath}
+	counter := &WriteCounter{Filename: filepath, Total: uint64(totalFileSize)}
 	_, err = io.Copy(out, io.TeeReader(resp.Body, counter))
 
 	fmt.Println()
@@ -96,12 +139,18 @@ func DownloadFile(filepath string, url string, cookies []*http.Cookie) error {
 
 func (wc *WriteCounter) Write(p []byte) (int, error) {
 	n := len(p)
-	wc.Total += uint64(n)
+	wc.Current += uint64(n)
 	wc.PrintProgress()
 	return n, nil
 }
 
 func (wc WriteCounter) PrintProgress() {
 	fmt.Printf("\r%s", strings.Repeat(" ", 35))
-	fmt.Printf("\rDownloading %s... %s complete", wc.Filename, humanize.Bytes(wc.Total))
+
+	if wc.Total == 0 {
+		fmt.Printf("\rDownloading %s... %s", wc.Filename, humanize.Bytes(wc.Current))
+	} else {
+		fmt.Printf("\rDownloading %s... %s / %s (%v %%)", wc.Filename, humanize.Bytes(wc.Current), humanize.Bytes(wc.Total), wc.Current*100/wc.Total)
+	}
+
 }

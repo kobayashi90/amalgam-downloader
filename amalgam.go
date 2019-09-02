@@ -38,7 +38,7 @@ func DownloadEpisode(episode *Episode) error {
 	}
 
 	// extract rar archive in /tmp directory
-	fmt.Printf("Extracting %v to %v\n", rarDownloadPath, extractionPath)
+	fmt.Printf("  --> Extracting %v to %v\n", rarDownloadPath, extractionPath)
 	err = archiver.Unarchive(rarDownloadPath, extractionPath)
 
 	// get video filename and rename it
@@ -48,10 +48,10 @@ func DownloadEpisode(episode *Episode) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Copy video to your path")
+	fmt.Println("  --> Copy video to your path")
 
 	// remove rar file and extracted directory
-	fmt.Println("Removing temporary files")
+	fmt.Println("  --> Removing temporary files")
 	err = os.Remove(rarDownloadPath)
 	err = os.RemoveAll(extractionPath)
 
