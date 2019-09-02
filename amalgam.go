@@ -10,9 +10,10 @@ import (
 )
 
 type Episode struct {
-	Title      string
-	EpisodeNr  string
-	GDriveLink string
+	Title        string
+	EpisodeNr    string
+	DownloadLink string
+	Downloadable bool
 }
 
 func DownloadEpisode(episode *Episode) error {
@@ -30,7 +31,7 @@ func DownloadEpisode(episode *Episode) error {
 	extractionPath := fmt.Sprintf("/tmp/%v-extracted", episode.EpisodeNr)
 
 	// Download rar archived video into /tmp directory
-	err = GdriveDownload(episode.GDriveLink, rarDownloadPath)
+	err = GdriveDownload(episode.DownloadLink, rarDownloadPath)
 	if err != nil {
 		return err
 	}
@@ -57,30 +58,39 @@ func DownloadEpisode(episode *Episode) error {
 }
 
 func FetchEpisodes() ([]*Episode, error) {
-	url := "https://amalgam-fansubs.moe/detektiv-conan-2017/"
-	doc, err := htmlquery.LoadURL(url)
-	if err != nil {
-		return nil, err
+	urls := []string{
+		"https://amalgam-fansubs.moe/detektiv-conan/",
+		"https://amalgam-fansubs.moe/detektiv-conan-2017/",
 	}
 
-	conanDiv := htmlquery.FindOne(doc, "//div[@id='conan']")
-	episodeTable := htmlquery.FindOne(conanDiv, "table")
-
-	rows := htmlquery.Find(episodeTable, "//tr")
-
 	var episodes []*Episode
-	for i := 1; i < len(rows); i++ {
-		cols := htmlquery.Find(rows[i], "//td")
-		episodeNr := htmlquery.InnerText(cols[0]) // number
-		episodeNr = strings.TrimSuffix(episodeNr, ".")
-		episodeTitle := htmlquery.InnerText(cols[1])                   // title
-		gdriveLink := htmlquery.SelectAttr(cols[3].FirstChild, "href") // gdrive link
+	for _, url := range urls {
+		doc, err := htmlquery.LoadURL(url)
+		if err != nil {
+			return nil, err
+		}
 
-		episodes = append(episodes, &Episode{
-			Title:      episodeTitle,
-			EpisodeNr:  episodeNr,
-			GDriveLink: gdriveLink,
-		})
+		conanDiv := htmlquery.FindOne(doc, "//div[@id='conan']")
+		episodeTable := htmlquery.FindOne(conanDiv, "table")
+
+		rows := htmlquery.Find(episodeTable, "//tr")
+
+		for i := 1; i < len(rows); i++ {
+			cols := htmlquery.Find(rows[i], "//td")
+			episodeNr := htmlquery.InnerText(cols[0]) // number
+			episodeNr = strings.TrimSuffix(episodeNr, ".")
+			episodeTitle := htmlquery.InnerText(cols[1])                   // title
+			gdriveLink := htmlquery.SelectAttr(cols[3].FirstChild, "href") // gdrive link
+
+			downloadable := strings.Contains(gdriveLink, "drive.google")
+
+			episodes = append(episodes, &Episode{
+				Title:        episodeTitle,
+				EpisodeNr:    episodeNr,
+				DownloadLink: gdriveLink,
+				Downloadable: downloadable,
+			})
+		}
 	}
 
 	return episodes, nil
