@@ -78,6 +78,10 @@ func ListEpisodes(c *cli.Context) error {
 			notAvailable++
 		}
 
+		if strings.Contains(e.EpisodeNr, ",") {
+			e.Title = fmt.Sprintf("%v (Combined Episode)", e.Title)
+		}
+
 		// Skip if available flag and episode is not downloadable
 		if c.Bool("available") && !e.Downloadable {
 			continue
@@ -110,6 +114,16 @@ func DownloadEpisodes(c *cli.Context) error {
 	var episodeArgList []string
 	episodesArgs := c.Args()
 
+	// Fetch episodes and create map for easier download
+	episodesList, err := FetchEpisodes()
+	if err != nil {
+		return err
+	}
+	episodes := make(map[string]*Episode)
+	for _, e := range episodesList {
+		episodes[e.EpisodeNr] = e
+	}
+
 	// Parse episodes argument
 	for _, s := range episodesArgs {
 		if strings.Contains(s, "-") {
@@ -125,6 +139,10 @@ func DownloadEpisodes(c *cli.Context) error {
 			}
 			for i := start; i <= end; i++ {
 				episodeArgList = append(episodeArgList, strconv.Itoa(i))
+				// handle ,5 episodes (there are episodes with numbers like 704,5)
+				//if _, ok := episodes[fmt.Sprintf("%v,5", i)]; ok {
+				//	episodeArgList = append(episodeArgList, fmt.Sprintf("%v,5", i))
+				//}
 			}
 		} else {
 			// handle simple comma separation
@@ -132,17 +150,7 @@ func DownloadEpisodes(c *cli.Context) error {
 		}
 	}
 
-	fmt.Println("episodeArgList:", episodeArgList)
-
-	// Fetch episodes and create map for easier download
-	episodesList, err := FetchEpisodes()
-	if err != nil {
-		return err
-	}
-	episodes := make(map[string]*Episode)
-	for _, e := range episodesList {
-		episodes[e.EpisodeNr] = e
-	}
+	fmt.Println("Downloading Episodes:", strings.Join(episodeArgList, " "))
 
 	// download episodes
 	for _, episodeNr := range episodeArgList {
