@@ -56,7 +56,7 @@ func GetTotalFileSize(exportUrl string) (int, error) {
 		return -1, err
 	}
 	matches := r.FindStringSubmatch(sizeSpanText)
-	fmt.Printf("Matches: %v\n", matches)
+	// fmt.Printf("Matches: %v\n", matches)
 
 	size, err := strconv.ParseFloat(matches[1], 64)
 	if err != nil {
