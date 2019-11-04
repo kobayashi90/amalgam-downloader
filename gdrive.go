@@ -51,12 +51,14 @@ func GetTotalFileSize(exportUrl string) (int, error) {
 	sizeSpan := htmlquery.FindOne(doc, "//span[@class = 'uc-name-size']")
 	sizeSpanText := htmlquery.InnerText(sizeSpan)
 
-	r, err := regexp.Compile("\\(([0-9]+)([kKmMgG])\\)")
+	r, err := regexp.Compile("\\(([0-9]+.?[0-9]*)([kKmMgG])\\)")
 	if err != nil {
 		return -1, err
 	}
 	matches := r.FindStringSubmatch(sizeSpanText)
-	size, err := strconv.Atoi(matches[1])
+	fmt.Printf("Matches: %v\n", matches)
+
+	size, err := strconv.ParseFloat(matches[1], 64)
 	if err != nil {
 		return -1, err
 	}
@@ -70,7 +72,7 @@ func GetTotalFileSize(exportUrl string) (int, error) {
 		size *= 1024
 	}
 
-	return size, err
+	return int(size), err
 }
 
 func GdriveDownload(url, filePath string) error {
@@ -130,8 +132,11 @@ func DownloadFile(filepath string, url string, cookies []*http.Cookie, totalFile
 
 	// Write the body to file
 	counter := &WriteCounter{Filename: filepath, Total: uint64(totalFileSize)}
-	_, err = io.Copy(out, io.TeeReader(resp.Body, counter))
 
+	_, err = io.Copy(out, io.TeeReader(resp.Body, counter))
+	if err != nil {
+		fmt.Println(err)
+	}
 	fmt.Println()
 
 	return err
@@ -140,7 +145,9 @@ func DownloadFile(filepath string, url string, cookies []*http.Cookie, totalFile
 func (wc *WriteCounter) Write(p []byte) (int, error) {
 	n := len(p)
 	wc.Current += uint64(n)
+
 	wc.PrintProgress()
+
 	return n, nil
 }
 
@@ -152,5 +159,4 @@ func (wc WriteCounter) PrintProgress() {
 	} else {
 		fmt.Printf("\rDownloading %s... %s / %s (%v %%)", wc.Filename, humanize.Bytes(wc.Current), humanize.Bytes(wc.Total), wc.Current*100/wc.Total)
 	}
-
 }
