@@ -2,7 +2,6 @@ package amalgam
 
 import (
 	"amalgamDCLoader/gdrive"
-	"amalgamDCLoader/lib"
 	"fmt"
 	"github.com/antchfx/htmlquery"
 	"github.com/mholt/archiver"
@@ -15,24 +14,8 @@ type Episode struct {
 	Title        string
 	EpisodeNr    string
 	DownloadLink string
-	GDriveLink   string
+	Downloadable bool
 	Note         string
-}
-
-func DownloadEpisode(episode *Episode) error {
-	wcdir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	// replace spaces in episode title with dots (.)
-	episodeTitle := strings.ReplaceAll(episode.Title, " ", ".")
-
-	filepath := fmt.Sprintf("%v/%v", wcdir, episodeTitle)
-
-	err = lib.DownloadFile(filepath, episode.DownloadLink)
-
-	return err
 }
 
 func DownloadEpisodeFromGDrive(episode *Episode) error {
@@ -99,20 +82,15 @@ func FetchEpisodes() ([]*Episode, error) {
 			cols := htmlquery.Find(rows[i], "//td")
 			episodeNr := htmlquery.InnerText(cols[0]) // number
 			episodeNr = strings.ReplaceAll(episodeNr, ".", "")
-			episodeTitle := htmlquery.InnerText(cols[1]) // title
-
-			gdriveLink := htmlquery.SelectAttr(cols[3].FirstChild, "href") // gdrive link
-			if !strings.Contains(gdriveLink, "drive.google") {
-				gdriveLink = ""
-			}
-
-			downloadLink := fmt.Sprintf("https://files01.amalgam-fansubs.moe/conan/%v.mp4", episodeNr)
+			episodeTitle := htmlquery.InnerText(cols[1])                     // title
+			downloadLink := htmlquery.SelectAttr(cols[3].FirstChild, "href") // gdrive link
+			downloadable := strings.Contains(downloadLink, "drive.google")
 
 			episodes = append(episodes, &Episode{
 				Title:        episodeTitle,
 				EpisodeNr:    strings.TrimSpace(episodeNr),
-				GDriveLink:   gdriveLink,
 				DownloadLink: downloadLink,
+				Downloadable: downloadable,
 			})
 		}
 	}
