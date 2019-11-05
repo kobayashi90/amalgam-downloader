@@ -1,6 +1,7 @@
-package main
+package amalgam
 
 import (
+	"amalgamDCLoader/gdrive"
 	"fmt"
 	"github.com/antchfx/htmlquery"
 	"github.com/mholt/archiver"
@@ -17,7 +18,7 @@ type Episode struct {
 	Note         string
 }
 
-func DownloadEpisode(episode *Episode) error {
+func DownloadEpisodeFromGDrive(episode *Episode) error {
 	// get current working directory
 	wcdir, err := os.Getwd()
 	if err != nil {
@@ -33,7 +34,7 @@ func DownloadEpisode(episode *Episode) error {
 	extractionPath := fmt.Sprintf("%v/%v-extracted", tmpDir, episode.EpisodeNr)
 
 	// Download rar archived video into /tmp directory
-	err = GdriveDownload(episode.DownloadLink, rarDownloadPath)
+	err = gdrive.GdriveDownload(episode.DownloadLink, rarDownloadPath)
 	if err != nil {
 		return err
 	}

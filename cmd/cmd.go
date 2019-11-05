@@ -1,6 +1,7 @@
 package main
 
 import (
+	"amalgamDCLoader/amalgam"
 	"fmt"
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/urfave/cli"
@@ -55,7 +56,7 @@ func CmdApp() *cli.App {
 }
 
 func ListEpisodes(c *cli.Context) error {
-	episodes, err := FetchEpisodes()
+	episodes, err := amalgam.FetchEpisodes()
 	if err != nil {
 		return err
 	}
@@ -115,11 +116,11 @@ func DownloadEpisodes(c *cli.Context) error {
 	episodesArgs := c.Args()
 
 	// Fetch episodes and create map for easier download
-	episodesList, err := FetchEpisodes()
+	episodesList, err := amalgam.FetchEpisodes()
 	if err != nil {
 		return err
 	}
-	episodes := make(map[string]*Episode)
+	episodes := make(map[string]*amalgam.Episode)
 	for _, e := range episodesList {
 		episodes[e.EpisodeNr] = e
 	}
@@ -161,7 +162,7 @@ func DownloadEpisodes(c *cli.Context) error {
 			fmt.Printf("Episode %v is not available\n", episodeNr)
 			continue
 		}
-		err = DownloadEpisode(episodes[episodeNr])
+		err = amalgam.DownloadEpisodeFromGDrive(episodes[episodeNr])
 		if err != nil {
 			fmt.Printf("Error while downloading Episode %v\n", episodeNr)
 		}

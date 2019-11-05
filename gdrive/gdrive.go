@@ -1,9 +1,9 @@
-package main
+package gdrive
 
 import (
+	"amalgamDCLoader/lib"
 	"fmt"
 	"github.com/antchfx/htmlquery"
-	"github.com/dustin/go-humanize"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,12 +12,6 @@ import (
 	"strconv"
 	"strings"
 )
-
-type WriteCounter struct {
-	Current  uint64
-	Total    uint64
-	Filename string
-}
 
 func GetConfirmCodeAndCookies(exportUrl string) ([]*http.Cookie, string, error) {
 	resp, err := http.Get(exportUrl)
@@ -131,7 +125,7 @@ func DownloadFile(filepath string, url string, cookies []*http.Cookie, totalFile
 	}
 
 	// Write the body to file
-	counter := &WriteCounter{Filename: filepath, Total: uint64(totalFileSize)}
+	counter := &lib.WriteCounter{Filename: filepath, Total: uint64(totalFileSize)}
 
 	_, err = io.Copy(out, io.TeeReader(resp.Body, counter))
 	if err != nil {
@@ -140,23 +134,4 @@ func DownloadFile(filepath string, url string, cookies []*http.Cookie, totalFile
 	fmt.Println()
 
 	return err
-}
-
-func (wc *WriteCounter) Write(p []byte) (int, error) {
-	n := len(p)
-	wc.Current += uint64(n)
-
-	wc.PrintProgress()
-
-	return n, nil
-}
-
-func (wc WriteCounter) PrintProgress() {
-	fmt.Printf("\r%s", strings.Repeat(" ", 35))
-
-	if wc.Total == 0 {
-		fmt.Printf("\rDownloading %s... %s", wc.Filename, humanize.Bytes(wc.Current))
-	} else {
-		fmt.Printf("\rDownloading %s... %s / %s (%v %%)", wc.Filename, humanize.Bytes(wc.Current), humanize.Bytes(wc.Total), wc.Current*100/wc.Total)
-	}
 }

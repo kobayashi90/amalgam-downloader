@@ -4,13 +4,13 @@ BIN_NAME=adcl
 all: build windows mac
 
 build:
-	go build -o ${BIN_NAME}
+	go build -o ${BIN_NAME} ./cmd/
 
 windows:
-	GOOS=windows GOARCH=386 go build -o ${BIN_NAME}.exe
+	GOOS=windows GOARCH=386 go build -o ${BIN_NAME}.exe ./cmd/
 
 mac:
-	GOOS=darwin GOARCH=amd64 go build -o ${BIN_NAME}_darwin
+	GOOS=darwin GOARCH=amd64 go build -o ${BIN_NAME}_darwin ./cmd/
 
 releases: all
 	tar -czvf ${BIN_NAME}v${VERSION}_linux.tar.gz ${BIN_NAME}
