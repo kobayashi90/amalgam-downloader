@@ -161,7 +161,12 @@ func DownloadEpisodes(c *cli.Context) error {
 		}
 	}
 
-	fmt.Println("Downloading Episodes:", strings.Join(episodeArgList, " "))
+	if c.Bool("gdrive") {
+		fmt.Println("Downloading Episodes:", strings.Join(episodeArgList, " "), "via google drive")
+	} else {
+		fmt.Println("Downloading Episodes:", strings.Join(episodeArgList, " "))
+	}
+
 	fmt.Println()
 
 	// download episodes
@@ -169,7 +174,7 @@ func DownloadEpisodes(c *cli.Context) error {
 		// check if episode is available
 		episode, ok := episodes[episodeNr]
 		if !ok {
-			fmt.Printf("Episode %v is not available\n", episodeNr)
+			fmt.Printf("Episode %v is not available\nPlease checkout https://amalgam-fansubs.moe/ for more informations.\n", episodeNr)
 			continue
 		}
 
