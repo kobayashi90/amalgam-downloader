@@ -18,7 +18,7 @@ releases: all
 	tar -czvf ${BIN_NAME}v${VERSION}_darwin.tar.gz ${BIN_NAME}_darwin
 
 install:
-	go build -o ${GOPATH}/bin/${BIN_NAME}
+	go build -o ${GOPATH}/bin/${BIN_NAME} ./cmd/
 
 uninstall:
 	rm -f ${GOPATH}/bin/${BIN_NAME}
