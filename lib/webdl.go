@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -28,9 +29,9 @@ func (wc WriteCounter) PrintProgress() {
 	fmt.Printf("\r%s", strings.Repeat(" ", 35))
 
 	if wc.Total == 0 {
-		fmt.Printf("\rDownloading %s... %s", wc.Filename, humanize.Bytes(wc.Current))
+		fmt.Printf("\rDownloading %s: %s", wc.Filename, humanize.Bytes(wc.Current))
 	} else {
-		fmt.Printf("\rDownloading %s... %s / %s (%v %%)", wc.Filename, humanize.Bytes(wc.Current), humanize.Bytes(wc.Total), wc.Current*100/wc.Total)
+		fmt.Printf("\rDownloading %s: %s / %s (%v %%)", wc.Filename, humanize.Bytes(wc.Current), humanize.Bytes(wc.Total), wc.Current*100/wc.Total)
 	}
 }
 
@@ -59,7 +60,7 @@ func DownloadFile(filepath string, url string) error {
 	totalFileSize := resp.ContentLength
 
 	// Write the body to file
-	counter := &WriteCounter{Filename: filepath, Total: uint64(totalFileSize)}
+	counter := &WriteCounter{Filename: path.Base(filepath), Total: uint64(totalFileSize)}
 
 	_, err = io.Copy(out, io.TeeReader(resp.Body, counter))
 	if err != nil {
