@@ -28,7 +28,7 @@ func DownloadEpisode(episode *Episode) error {
 	// replace spaces in episode title with dots (.)
 	episodeTitle := strings.ReplaceAll(episode.Title, " ", ".")
 
-	filepath := fmt.Sprintf("%v/%v", wcdir, episodeTitle)
+	filepath := fmt.Sprintf("%v/%v-%v.mp4", wcdir, episode.EpisodeNr, episodeTitle)
 
 	err = lib.DownloadFile(filepath, episode.DownloadLink)
 
@@ -51,7 +51,7 @@ func DownloadEpisodeFromGDrive(episode *Episode) error {
 	extractionPath := fmt.Sprintf("%v/%v-extracted", tmpDir, episode.EpisodeNr)
 
 	// Download rar archived video into /tmp directory
-	err = gdrive.GdriveDownload(episode.DownloadLink, rarDownloadPath)
+	err = gdrive.GdriveDownload(episode.GDriveLink, rarDownloadPath)
 	if err != nil {
 		return err
 	}
