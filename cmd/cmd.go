@@ -2,6 +2,7 @@ package main
 
 import (
 	"amalgamDCLoader/amalgam"
+	dch "amalgamDCLoader/detektivConanCh"
 	"fmt"
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/urfave/cli"
@@ -58,9 +59,64 @@ func CmdApp() *cli.App {
 				},
 			},
 		},
+		{
+			Name:  "music",
+			Usage: "list and download music from detektiv-conan.ch",
+			Subcommands: []cli.Command{
+				{
+					Name:    "list",
+					Aliases: []string{"l"},
+					Action:  ListMusic,
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:     "format",
+							Usage:    "available values: csv, html, md",
+							Required: false,
+							Hidden:   false,
+							Value:    "",
+						},
+					},
+				},
+				{
+					Name:      "download",
+					Aliases:   []string{"d"},
+					Action:    DownloadMusic,
+					ArgsUsage: "music list: 1 2 3  episode range: 4-10, combined: 1 2-6 8",
+				},
+			},
+		},
 	}
 
 	return app
+}
+
+func parseArgsList(args cli.Args) ([]string, error) {
+	var argList []string
+	for _, s := range args {
+		if strings.Contains(s, "-") {
+			// handle ranges
+			splitted := strings.Split(s, "-")
+			start, err := strconv.Atoi(splitted[0])
+			if err != nil {
+				return nil, err
+			}
+			end, err := strconv.Atoi(splitted[1])
+			if err != nil {
+				return nil, err
+			}
+			for i := start; i <= end; i++ {
+				argList = append(argList, strconv.Itoa(i))
+				// handle ,5 episodes (there are episodes with numbers like 704,5)
+				//if _, ok := episodes[fmt.Sprintf("%v,5", i)]; ok {
+				//	episodeArgList = append(episodeArgList, fmt.Sprintf("%v,5", i))
+				//}
+			}
+		} else {
+			// handle simple comma separation
+			argList = append(argList, s)
+		}
+	}
+	return argList, nil
 }
 
 func ListEpisodes(c *cli.Context) error {
@@ -135,30 +191,9 @@ func DownloadEpisodes(c *cli.Context) error {
 		episodes[e.EpisodeNr] = e
 	}
 
-	// Parse episodes argument
-	for _, s := range episodesArgs {
-		if strings.Contains(s, "-") {
-			// handle ranges
-			splitted := strings.Split(s, "-")
-			start, err := strconv.Atoi(splitted[0])
-			if err != nil {
-				return err
-			}
-			end, err := strconv.Atoi(splitted[1])
-			if err != nil {
-				return err
-			}
-			for i := start; i <= end; i++ {
-				episodeArgList = append(episodeArgList, strconv.Itoa(i))
-				// handle ,5 episodes (there are episodes with numbers like 704,5)
-				//if _, ok := episodes[fmt.Sprintf("%v,5", i)]; ok {
-				//	episodeArgList = append(episodeArgList, fmt.Sprintf("%v,5", i))
-				//}
-			}
-		} else {
-			// handle simple comma separation
-			episodeArgList = append(episodeArgList, s)
-		}
+	episodeArgList, err = parseArgsList(episodesArgs)
+	if err != nil {
+		return err
 	}
 
 	if c.Bool("gdrive") {
@@ -194,6 +229,68 @@ func DownloadEpisodes(c *cli.Context) error {
 		}
 
 		fmt.Println()
+	}
+
+	return nil
+}
+
+func ListMusic(c *cli.Context) error {
+	musics, err := dch.FetchMusic()
+	if err != nil {
+		return err
+	}
+	fmt.Println(musics[0].DownloadLink)
+
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.SetStyle(table.StyleRounded)
+	t.AppendHeader(table.Row{"ID", "Title"})
+
+	for i, m := range musics {
+		t.AppendRow(table.Row{i, m.Title})
+	}
+
+	t.AppendFooter(table.Row{fmt.Sprintf("Total: %v", len(musics))})
+
+	if c.String("format") == "csv" {
+		t.RenderCSV()
+	} else if c.String("format") == "html" {
+		t.RenderHTML()
+	} else if c.String("format") == "md" {
+		t.RenderMarkdown()
+	} else {
+		t.Render()
+	}
+
+	return nil
+}
+
+func DownloadMusic(c *cli.Context) error {
+	var musicArgList []string
+	episodesArgs := c.Args()
+
+	// Fetch episodes and create map for easier download
+	musicList, err := dch.FetchMusic()
+	if err != nil {
+		return err
+	}
+
+	musicArgList, err = parseArgsList(episodesArgs)
+	if err != nil {
+		return err
+	}
+
+	for _, musicIndex := range musicArgList {
+		index, err := strconv.Atoi(musicIndex)
+		if err != nil {
+			fmt.Printf("Could not download music on index %v\n", musicIndex)
+		}
+
+		err = dch.DownloadMusic(musicList[index])
+
+		if err != nil {
+			fmt.Printf("Could not download music on index %v\n", musicIndex)
+		}
 	}
 
 	return nil
