@@ -97,6 +97,9 @@ func FetchEpisodes() ([]*Episode, error) {
 
 		for i := 1; i < len(rows); i++ {
 			cols := htmlquery.Find(rows[i], "//td")
+			if len(cols) <= 0 {
+				continue
+			}
 			episodeNr := htmlquery.InnerText(cols[0]) // number
 			episodeNr = strings.ReplaceAll(episodeNr, ".", "")
 			episodeTitle := htmlquery.InnerText(cols[1]) // title
