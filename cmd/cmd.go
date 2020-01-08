@@ -15,47 +15,54 @@ func CmdApp() *cli.App {
 	app := cli.NewApp()
 	app.Name = "Detektiv Conan Amalgam Downloader"
 	app.Usage = "Download Detektiv Conan Episodes from https://amalgam-fansubs.moe/"
+	app.Version = "0.3"
 
 	app.Commands = []cli.Command{
 		{
-			Name:    "list",
-			Aliases: []string{"l"},
-			Usage:   "list available episodes",
-			Action:  ListEpisodes,
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:     "dlink,d",
-					Usage:    "List episodes with download links",
-					Required: false,
-					Hidden:   false,
+			Name:  "episodes",
+			Usage: "list and download episodes from amalgam",
+			Subcommands: []cli.Command{
+				{
+					Name:    "list",
+					Aliases: []string{"l"},
+					Usage:   "list available episodes",
+					Action:  ListEpisodes,
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:     "dlink,d",
+							Usage:    "List episodes with download links",
+							Required: false,
+							Hidden:   false,
+						},
+						cli.BoolFlag{
+							Name:     "gdrive,g",
+							Usage:    "Show if episodes can be downloaded via google drive",
+							Required: false,
+							Hidden:   false,
+						},
+						cli.StringFlag{
+							Name:     "format",
+							Usage:    "available values: csv, html, md",
+							Required: false,
+							Hidden:   false,
+							Value:    "",
+						},
+					},
 				},
-				cli.BoolFlag{
-					Name:     "gdrive,g",
-					Usage:    "Show if episodes can be downloaded via google drive",
-					Required: false,
-					Hidden:   false,
-				},
-				cli.StringFlag{
-					Name:     "format",
-					Usage:    "available values: csv, html, md",
-					Required: false,
-					Hidden:   false,
-					Value:    "",
-				},
-			},
-		},
-		{
-			Name:      "download",
-			Aliases:   []string{"d"},
-			Usage:     "download episodes",
-			ArgsUsage: "episode list: 1 2 3  episode range: 4-10, combined: 1 2-6 8",
-			Action:    DownloadEpisodes,
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:     "gdrive,g",
-					Usage:    "Download episode from google drive",
-					Required: false,
-					Hidden:   false,
+				{
+					Name:      "download",
+					Aliases:   []string{"d"},
+					Usage:     "download episodes",
+					ArgsUsage: "episode list: 1 2 3  episode range: 4-10, combined: 1 2-6 8",
+					Action:    DownloadEpisodes,
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:     "gdrive,g",
+							Usage:    "Download episode from google drive",
+							Required: false,
+							Hidden:   false,
+						},
+					},
 				},
 			},
 		},
@@ -82,6 +89,7 @@ func CmdApp() *cli.App {
 					Aliases:   []string{"d"},
 					Action:    DownloadMusic,
 					ArgsUsage: "music list: 1 2 3  episode range: 4-10, combined: 1 2-6 8",
+					// TODO: Add flag for instant zip unpacking
 				},
 			},
 		},
@@ -225,7 +233,7 @@ func DownloadEpisodes(c *cli.Context) error {
 		}
 
 		if err != nil {
-			fmt.Printf("Error while downloading Episode %v\n", episodeNr)
+			fmt.Printf("Episode %v could not be downloaded, %v\n", episodeNr, err)
 		}
 
 		fmt.Println()
