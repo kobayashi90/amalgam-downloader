@@ -48,6 +48,9 @@ func DownloadFile(filepath string, url string) error {
 	if err != nil {
 		return err
 	}
+	if resp.StatusCode >= 300 {
+		return fmt.Errorf("unexpected response status: %v", resp.Status)
+	}
 	defer resp.Body.Close()
 
 	// Create the file
