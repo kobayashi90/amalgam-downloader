@@ -1,4 +1,4 @@
-VERSION=0.2
+VERSION=0.3
 BIN_NAME=adcl
 
 all: build windows mac
