@@ -13,8 +13,8 @@ import (
 
 func CmdApp() *cli.App {
 	app := cli.NewApp()
-	app.Name = "Detektiv Conan Amalgam Downloader"
-	app.Usage = "Download Detektiv Conan Episodes from https://amalgam-fansubs.moe/"
+	app.Name = "Detektiv Conan Downloader"
+	app.Usage = "Download Detektiv Conan Episodes from https://amalgam-fansubs.moe/ and Music from detektiv-conan.ch"
 	app.Version = "0.3"
 
 	app.Commands = []cli.Command{
@@ -88,8 +88,21 @@ func CmdApp() *cli.App {
 					Name:      "download",
 					Aliases:   []string{"d"},
 					Action:    DownloadMusic,
-					ArgsUsage: "music list: 1 2 3  episode range: 4-10, combined: 1 2-6 8",
-					// TODO: Add flag for instant zip unpacking
+					ArgsUsage: "music id list: 1 2 3  music id range: 4-10, combined: 1 2-6 8",
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:     "unzip,u",
+							Usage:    "directly unzip the downloaded in file into a new directory",
+							Required: false,
+							Hidden:   false,
+						},
+						cli.BoolFlag{
+							Name:     "keepArchive,k",
+							Usage:    "keep archive after extraction",
+							Required: false,
+							Hidden:   false,
+						},
+					},
 				},
 			},
 		},
@@ -255,7 +268,7 @@ func ListMusic(c *cli.Context) error {
 	t.AppendHeader(table.Row{"ID", "Title"})
 
 	for i, m := range musics {
-		t.AppendRow(table.Row{i, m.Title})
+		t.AppendRow(table.Row{i + 1, m.Title})
 	}
 
 	t.AppendFooter(table.Row{fmt.Sprintf("Total: %v", len(musics))})
@@ -294,10 +307,11 @@ func DownloadMusic(c *cli.Context) error {
 			fmt.Printf("Could not download music on index %v\n", musicIndex)
 		}
 
-		err = dch.DownloadMusic(musicList[index])
+		index -= 1 // shift index back (input indices are from 1-end)
+		err = dch.DownloadMusic(musicList[index], c.Bool("unzip"), c.Bool("keepArchive"))
 
 		if err != nil {
-			fmt.Printf("Could not download music on index %v\n", musicIndex)
+			fmt.Printf("Could not download music %v\n%v\n", musicList[index].Title, err)
 		}
 	}
 
