@@ -27,23 +27,70 @@ $ make mac
 ```
 
 # Usage
+#### General Usage
+```bash
+$ adcl <subcommand> <action> [flags] <parameter>
+```
+**Subcommands**: 
+- episodes
+- music
+
+**Actions**:
+- download
+- list
+ 
+
 #### Show Help
 ```bash
 $ adcl -h
 ```
+
+### Episodes
 #### List Episodes
 ```bash
-$ adcl list
-$ adcl l
+$ adcl episodes list
+$ adcl episodes l
 ```
+##### Flags
+- **--dlink, -d**: show the default download link
+- **--gdrive, -g**: show an indicator if a google drive download link is available
+- **--format \<value\>, -f \<value\>**: set the output format. Available values: **csv, html, md** 
+
 #### Download Episodes
 ```bash
-$ adcl download <episode_numbers>
-$ adcl d <episode_numbers>
+$ adcl episodes download <episode_numbers>
+$ adcl episodes d <episode_numbers>
 ```
 *<episode_numbers>* is a separated list of episode numbers: **1 2 3 4**.
 In addition you can provide ranges within this list: **1 2 3-8 10**. 
 ```bash
 # example
-$ adcl d 710 840-845 870
+$ adcl episodes d 710 840-845 870
 ```
+##### Flags
+- **--gdrive, -g**: download the episode from google drive
+
+
+### Music
+#### List Music
+```bash
+$ adcl music list
+$ adcl music l
+```
+##### Flags
+- **--format \<value\>, -f \<value\>**: set the output format. Available values: **csv, html, md** 
+
+#### Download Music
+```bash
+$ adcl music download <music_ids>
+$ adcl music d <music_ids>
+```
+*<music_ids>* is a separated list of music IDs matching the IDs in the list: **1 2 3 4**.
+In addition you can provide ranges within this list: **1 2 3-8 10**. 
+```bash
+# example
+$ adcl music d 1 3-6 22
+```
+##### Flags
+- **--unzip, -u**: extract the zip archive after download
+- **--keepArchive, -k**: do not remove the archive after extraction 
