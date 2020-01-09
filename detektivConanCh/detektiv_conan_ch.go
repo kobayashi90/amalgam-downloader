@@ -4,6 +4,7 @@ import (
 	"amalgamDCLoader/lib"
 	"fmt"
 	"github.com/antchfx/htmlquery"
+	"github.com/mholt/archiver"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,7 +47,7 @@ func FetchMusic() ([]*Music, error) {
 	return musics, nil
 }
 
-func DownloadMusic(music *Music) error {
+func DownloadMusic(music *Music, unzip, keepArchive bool) error {
 	wcdir, err := os.Getwd()
 	if err != nil {
 		return err
@@ -55,6 +56,28 @@ func DownloadMusic(music *Music) error {
 	fp := fmt.Sprintf("%v/%v", wcdir, music.Filename)
 
 	err = lib.DownloadFile(fp, music.DownloadLink)
+
+	if unzip {
+		// create directory for extraction
+		archivePath := filepath.Dir(fp)
+		extractionDirPath := fmt.Sprintf("%s/%s/", archivePath, strings.TrimSuffix(music.Filename, ".zip"))
+		err = os.Mkdir(extractionDirPath, 0775)
+		if err != nil {
+			return err
+		}
+
+		err = archiver.Unarchive(fp, extractionDirPath)
+		if err != nil {
+			return err
+		}
+
+		if !keepArchive {
+			err = os.Remove(fp)
+			if err != nil {
+				return err
+			}
+		}
+	}
 
 	return err
 }
