@@ -15,7 +15,7 @@ func CmdApp() *cli.App {
 	app := cli.NewApp()
 	app.Name = "Detektiv Conan Downloader"
 	app.Usage = "Download Detektiv Conan Episodes from https://amalgam-fansubs.moe/ and Music from detektiv-conan.ch"
-	app.Version = "0.3"
+	app.Version = "0.3.1"
 
 	app.Commands = []cli.Command{
 		{
