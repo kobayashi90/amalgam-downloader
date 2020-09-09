@@ -3,6 +3,7 @@ package amalgam
 import (
 	"amalgamDCLoader/gdrive"
 	"amalgamDCLoader/lib"
+	"amalgamDCLoader/util"
 	"fmt"
 	"github.com/antchfx/htmlquery"
 	"github.com/mholt/archiver"
@@ -78,9 +79,20 @@ func DownloadEpisodeFromGDrive(episode *Episode) error {
 }
 
 func FetchEpisodes() ([]*Episode, error) {
+	defaultBaseUrl := "https://amalgam-fansubs.moe"
+	backupBaseUrl := "https://amalgamsubs.lima-city.de"
+	var baseUrl string
+
+	if util.CheckIfAvailable(defaultBaseUrl) {
+		baseUrl = defaultBaseUrl
+	} else {
+		fmt.Printf("%v is not reachable right now, trying to use backup %v:\n", defaultBaseUrl, backupBaseUrl)
+		baseUrl = backupBaseUrl
+	}
+
 	urls := []string{
-		"https://amalgam-fansubs.moe/detektiv-conan/",
-		"https://amalgam-fansubs.moe/detektiv-conan-2017/",
+		baseUrl + "/detektiv-conan/",
+		baseUrl + "/detektiv-conan-2017/",
 	}
 
 	var episodes []*Episode
