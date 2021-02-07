@@ -121,7 +121,7 @@ func FetchEpisodes() ([]*Episode, error) {
 				gdriveLink = ""
 			}
 
-			downloadLink := fmt.Sprintf("https://files01.amalgam-fansubs.moe/conan/%v.mp4", episodeNr)
+			downloadLink := fmt.Sprintf("https://cdn.amalgam-fansubs.moe/conan/%v.mp4", episodeNr)
 
 			episodes = append(episodes, &Episode{
 				Title:        episodeTitle,
